@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, 'Helvetica Neue', sans-serif;
+      background: #f8f6f1;
+      color: #1a1a18;
+      min-height: 100vh;
+    }
+
+    :root {
+      --green-dark: #2d5a3d;
+      --green-mid: #4a7c5e;
+      --green-light: #e8f0ea;
+      --gold: #b8975a;
+      --gold-light: #f5edd8;
+      --cream: #faf8f3;
+      --border: rgba(45, 90, 61, 0.15);
+      --border-strong: rgba(45, 90, 61, 0.3);
+      --text-primary: #1a1a18;
+      --text-secondary: #5a5a52;
+      --text-muted: #8a8a80;
+      --radius: 12px;
+      --shadow: 0 2px 12px rgba(45, 90, 61, 0.08);
+    }
+
+    .app {
+      max-width: 430px;
+      margin: 0 auto;
+      padding-bottom: 100px;
+    }
+
+    /* Header */
+    .header {
+      background: var(--green-dark);
+      padding: 20px 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 16px;
+    }
+
+    .logo-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .logo-wrap img {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+    }
+
+    .logo-letter {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+
+    .header-title {
+      flex: 1;
+    }
+
+    .header-title h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      letter-spacing: 0.5px;
+    }
+
+    .header-title p {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 2px;
+    }
+
+    /* Steps nav */
+    .steps-nav {
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      gap: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .steps-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .step-tab {
+      flex-shrink: 0;
+      padding: 10px 16px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.55);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .step-tab.active {
+      color: white;
+      border-bottom-color: var(--gold);
+    }
+
+    .step-tab.done {
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    /* Content */
+    .content {
+      padding: 16px;
+    }
+
+    .section {
+      background: white;
+      border-radius: var(--radius);
+      border: 0.5px solid var(--border);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 14px 16px 12px;
+      border-bottom: 0.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--green-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .section-icon svg {
+      width: 15px;
+      height: 15px;
+      color: var(--green-dark);
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--green-dark);
+      letter-spacing: 0.3px;
+    }
+
+    .section-body {
+      padding: 14px 16px;
+    }
+
+    /* Fields */
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 15px;
+      border: 0.5px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--cream);
+      color: var(--text-primary);
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+
+    .field-input:focus {
+      border-color: var(--green-mid);
+      background: white;
+    }
+
+    .field-input::placeholder {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field-row-3 {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    select.field-input {
+      cursor: pointer;
+    }
+
+    textarea.field-input {
+      resize: none;
+      min-height: 70px;
+      font-size: 14px;
+    }
+
+    /* Products */
+    .product-item {
+      background: var(--cream);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 0.5px solid var(--border);
+      position: relative;
+    }
+
+    .product-remove {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #c0392b;
+      opacity: 0.6;
+      font-size: 18px;
+      padding: 2px;
+      line-height: 1;
+    }
+
+    .product-remove:hover {
+      opacity: 1;
+    }
+
+    .product-name-row {
+      margin-bottom: 8px;
+    }
+
+    .add-btn {
+      width: 100%;
+      padding: 11px;
+      border: 1px dashed var(--green-mid);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--green-mid);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .add-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .add-btn:hover {
+      background: var(--green-light);
+    }
+
+    /* Frete */
+    .frete-result {
+      background: var(--gold-light);
+      border: 0.5px solid rgba(184, 151, 90, 0.4);
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 14px;
+    }
+
+    .frete-result-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 4px;
+    }
+
+    .frete-result-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #7a5e20;
+    }
+
+    .frete-dist {
+      font-size: 12px;
+      color: #9a7a40;
+      margin-top: 2px;
+    }
+
+    .calc-btn {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: var(--green-mid);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+      margin-top: 12px;
+    }
+
+    .calc-btn:hover {
+      background: var(--green-dark);
+    }
+
+    .calc-btn:active {
+      transform: scale(0.98);
+    }
+
+    .loading-btn {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* Resumo */
+    .resumo-card {
+      background: white;
+      border-radius: var(--radius);
+      border: 0.5px solid var(--border);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .resumo-header {
+      background: var(--green-dark);
+      padding: 16px;
+    }
+
+    .resumo-header h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .resumo-header p {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 3px;
+    }
+
+    .resumo-body {
+      padding: 14px 16px;
+    }
+
+    .resumo-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 0.5px solid var(--border);
+      font-size: 14px;
+    }
+
+    .resumo-row:last-child {
+      border-bottom: none;
+    }
+
+    .resumo-row label {
+      color: var(--text-secondary);
+    }
+
+    .resumo-row span {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .resumo-total {
+      background: var(--green-dark);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .resumo-total label {
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .resumo-total span {
+      color: white;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .items-list {
+      margin: 8px 0;
+    }
+
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 0.5px solid var(--border);
+      font-size: 13px;
+    }
+
+    .item-row:last-child {
+      border-bottom: none;
+    }
+
+    /* Action buttons */
+    .actions {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 0.5px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      gap: 10px;
+      max-width: 430px;
+      margin: 0 auto;
+      z-index: 200;
+    }
+
+    .actions {
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 13px 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .action-btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-whats {
+      background: #25D366;
+      color: white;
+    }
+
+    .btn-whats:hover {
+      background: #1da84f;
+    }
+
+    .btn-pdf {
+      background: var(--green-dark);
+      color: white;
+    }
+
+    .btn-pdf:hover {
+      background: #1e3d29;
+    }
+
+    .btn-nav {
+      background: var(--green-mid);
+      color: white;
+    }
+
+    .btn-nav-prev {
+      background: white;
+      color: var(--green-dark);
+      border: 1px solid var(--border-strong);
+    }
+
+    /* Tag/badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-green {
+      background: var(--green-light);
+      color: var(--green-dark);
+    }
+
+    /* Tip box */
+    .tip {
+      background: var(--gold-light);
+      border-left: 3px solid var(--gold);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 12px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #7a5e20;
+      line-height: 1.5;
+    }
+
+    /* Copied toast */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--green-dark);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    /* PDF Modal */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: flex;
+      align-items: flex-end;
+      padding: 0;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 20px 16px 40px;
+    }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border-strong);
+      border-radius: 4px;
+      margin: 0 auto 16px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--green-dark);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .modal-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* PDF Preview */
+    #pdf-preview {
+      background: white;
+      padding: 20px;
+      font-size: 12px;
+      color: #222;
+    }
+
+    .pdf-logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--green-dark);
+      padding-bottom: 12px;
+    }
+
+    .pdf-logo {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--green-dark);
+      flex-shrink: 0;
+    }
+
+    .pdf-empresa h2 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+
+    .pdf-empresa p {
+      font-size: 10px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .pdf-num-row {
+      display: flex;
+      justify-content: space-between;
+      background: #f5f5f0;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #444;
+    }
+
+    .pdf-section-title {
+      background: var(--green-dark);
+      color: white;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 4px;
+      margin: 10px 0 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .pdf-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .pdf-table th {
+      background: #eee;
+      padding: 5px 8px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 10px;
+      color: #444;
+    }
+
+    .pdf-table td {
+      padding: 5px 8px;
+      border-bottom: 0.5px solid #e5e5e0;
+    }
+
+    .pdf-table tr:nth-child(even) td {
+      background: #fafaf5;
+    }
+
+    .pdf-totals {
+      margin-top: 10px;
+      background: #f5f5f0;
+      border-radius: 6px;
+      padding: 8px 12px;
+    }
+
+    .pdf-total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 3px 0;
+    }
+
+    .pdf-total-final {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--green-dark);
+      padding: 6px 0 0;
+      border-top: 1.5px solid var(--green-dark);
+      margin-top: 4px;
+    }
+
+    .pdf-obs {
+      background: #f9f9f4;
+      border: 0.5px solid #ddd;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-top: 10px;
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .pdf-assinaturas {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+
+    .pdf-ass {
+      text-align: center;
+      width: 40%;
+    }
+
+    .pdf-ass-line {
+      border-top: 1px solid #333;
+      padding-top: 4px;
+      font-size: 10px;
+      color: #555;
+    }
+
+    .num-input {
+      text-align: right;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-top">
+        <div class="logo-wrap">
+          <span class="logo-letter">W</span>
+        </div>
+        <div class="header-title">
+          <h1>Warner Flores</h1>
+          <p>Gerador de orçamentos</p>
+        </div>
+      </div>
+      <div class="steps-nav" id="steps-nav">
+        <div class="step-tab active" data-step="0">👤 Cliente</div>
+        <div class="step-tab" data-step="1">📅 Evento</div>
+        <div class="step-tab" data-step="2">🌸 Pedido</div>
+        <div class="step-tab" data-step="3">🚗 Frete</div>
+        <div class="step-tab" data-step="4">💳 Pagamento</div>
+        <div class="step-tab" data-step="5">📋 Resumo</div>
+      </div>
+    </div>
+
+    <div class="content" id="main-content">
+      <!-- Steps rendered by JS -->
+    </div>
+
+    <!-- Bottom navigation -->
+    <div class="actions" id="bottom-actions">
+      <button class="action-btn btn-nav-prev" id="btn-prev" style="display:none">← Voltar</button>
+      <button class="action-btn btn-nav" id="btn-next">Próximo →</button>
+    </div>
+
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- PDF Modal -->
+  <div class="modal-bg hidden" id="pdf-modal">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">📄 Orçamento PDF</div>
+      <div class="modal-sub">Visualize e baixe o orçamento formatado</div>
+      <div id="pdf-preview"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button class="action-btn btn-nav-prev" style="flex:1"
+          onclick="document.getElementById('pdf-modal').classList.add('hidden')">Fechar</button>
+        <button class="action-btn btn-pdf" style="flex:1" onclick="printPDF()">🖨️ Imprimir / Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      step: 0,
+      cliente: { nome: '', cpf: '', whatsapp: '', endereco: '' },
+      evento: { endereco: '', data: '', hora: '', duracao: '' },
+      produtos: [{ id: 1, nome: '', valorUnit: 0, qtd: 1, obs: '' }],
+      frete: {
+        custo: 1.59,
+        margemPct: 25,
+        minimo: 10,
+        distanciaKm: 0,
+        valorFrete: 0,
+        calcStatus: ''
+      },
+      pagamento: { metodo: 'PIX', taxaPct: 0, incluirFrete: true },
+      numOrc: gerarNumOrc()
+    };
+
+    function gerarNumOrc() {
+      const d = new Date();
+      return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}${Math.floor(Math.random() * 100)}`;
+    }
+
+    const steps = ['cliente', 'evento', 'pedido', 'frete', 'pagamento', 'resumo'];
+
+    /* ---- Icon SVGs ---- */
+    const icons = {
+      user: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
+      calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`,
+      flower: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="12" cy="5"  rx="2.2" ry="4" stroke="currentColor"/>
+    <ellipse cx="12" cy="5"  rx="2.2" ry="4" stroke="currentColor" transform="rotate(60 12 12)"/>
+    <ellipse cx="12" cy="5"  rx="2.2" ry="4" stroke="currentColor" transform="rotate(120 12 12)"/>
+    <ellipse cx="12" cy="5"  rx="2.2" ry="4" stroke="currentColor" transform="rotate(180 12 12)"/>
+    <ellipse cx="12" cy="5"  rx="2.2" ry="4" stroke="currentColor" transform="rotate(240 12 12)"/>
+    <ellipse cx="12" cy="5"  rx="2.2" ry="4" stroke="currentColor" transform="rotate(300 12 12)"/>
+    <circle  cx="12" cy="12" r="2.8" fill="currentColor" opacity="0.2" stroke="currentColor"/>
+    <line x1="12" y1="10.2" x2="12" y2="13.8" stroke="currentColor" stroke-width="1.2"/>
+    <line x1="10.4" y1="12" x2="13.6" y2="12" stroke="currentColor" stroke-width="1.2"/>
+  </svg>`,
+      truck: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 3h15v13H1z"/><path d="M16 8h5l2 5v4h-7V8zM5.5 20a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18.5 20a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/></svg>`,
+      card: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>`,
+      doc: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>`,
+      plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>`
+    };
+
+    function sectionIcon(name) {
+      return `<div class="section-icon">${icons[name] || ''}</div>`;
+    }
+
+    /* ---- Calcs ---- */
+    function subtotalProdutos() {
+      return state.produtos.reduce((s, p) => s + (parseFloat(p.valorUnit) || 0) * (parseInt(p.qtd) || 0), 0);
+    }
+    function calcFrete() {
+      const { custo, margemPct, minimo, distanciaKm } = state.frete;
+      const custoTotal = custo * distanciaKm;
+      const margem = (margemPct || 0) / 100;
+      const frete = margem >= 1 ? custoTotal : Math.max(parseFloat(minimo) || 0, custoTotal / (1 - margem));
+      return frete;
+    }
+    function valorFinal() {
+      const sub = subtotalProdutos();
+      const frete = state.pagamento.incluirFrete ? (state.frete.valorFrete || 0) : 0;
+      const base = sub + frete;
+      const taxa = (state.pagamento.taxaPct || 0) / 100;
+      return base * (1 + taxa);
+    }
+
+    function fmt(v) {
+      return 'R$ ' + parseFloat(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    /* ---- Render steps ---- */
+    function renderStep() {
+      const c = document.getElementById('main-content');
+      const tabs = document.querySelectorAll('.step-tab');
+      tabs.forEach((t, i) => {
+        t.classList.toggle('active', i === state.step);
+        t.classList.toggle('done', i < state.step);
+      });
+
+      document.getElementById('btn-prev').style.display = state.step > 0 ? 'flex' : 'none';
+      const isLast = state.step === 5;
+      document.getElementById('btn-next').style.display = isLast ? 'none' : 'flex';
+      document.getElementById('bottom-actions').style.display = 'flex';
+
+      if (state.step === 0) c.innerHTML = renderCliente();
+      if (state.step === 1) c.innerHTML = renderEvento();
+      if (state.step === 2) c.innerHTML = renderPedido();
+      if (state.step === 3) c.innerHTML = renderFrete();
+      if (state.step === 4) c.innerHTML = renderPagamento();
+      if (state.step === 5) c.innerHTML = renderResumo();
+
+      attachListeners();
+    }
+
+    function field(label, inputHtml) {
+      return `<div class="field"><label class="field-label">${label}</label>${inputHtml}</div>`;
+    }
+    function inp(id, ph, val = '', type = 'text', cls = '') {
+      return `<input class="field-input ${cls}" id="${id}" type="${type}" placeholder="${ph}" value="${escHtml(val)}" />`;
+    }
+    function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+    /* ---- Step 0: Cliente ---- */
+    function renderCliente() {
+      const cl = state.cliente;
+      return `
+    <div class="section">
+      <div class="section-header">${sectionIcon('user')}<span class="section-title">Dados do cliente</span></div>
+      <div class="section-body">
+        ${field('Nome', inp('cl-nome', 'Ex: Paróquia São Francisco', cl.nome))}
+        ${field('CPF / CNPJ', inp('cl-cpf', '000.000.000-00', cl.cpf))}
+        ${field('WhatsApp', inp('cl-whats', '(82) 99999-9999', cl.whatsapp, 'tel'))}
+        ${field('Endereço', inp('cl-end', 'Rua, número, bairro, cidade', cl.endereco))}
+      </div>
+    </div>
+    <div class="tip">💡 O nome e telefone serão usados na mensagem do WhatsApp.</div>
+  `;
+    }
+
+    /* ---- Step 1: Evento ---- */
+    function renderEvento() {
+      const ev = state.evento;
+      return `
+    <div class="section">
+      <div class="section-header">${sectionIcon('calendar')}<span class="section-title">Dados do evento</span></div>
+      <div class="section-body">
+        ${field('Endereço do evento', inp('ev-end', 'Rua da Igreja, número, cidade', ev.endereco))}
+        <div class="field-row">
+          ${field('Data', inp('ev-data', '', ev.data, 'date'))}
+          ${field('Hora', inp('ev-hora', '', ev.hora, 'time'))}
+        </div>
+        ${field('Duração (opcional)', inp('ev-dur', 'Ex: 3 horas', ev.duracao))}
+      </div>
+    </div>
+    <div class="tip">🗺️ O endereço do evento será usado para calcular o frete automaticamente.</div>
+  `;
+    }
+
+    /* ---- Step 2: Pedido ---- */
+    function renderPedido() {
+      let html = `<div class="section">
+    <div class="section-header">${sectionIcon('flower')}<span class="section-title">Itens do pedido</span></div>
+    <div class="section-body" id="produtos-list">`;
+      state.produtos.forEach((p, i) => {
+        html += `
+      <div class="product-item" data-idx="${i}">
+        ${state.produtos.length > 1 ? `<button class="product-remove" data-remove="${i}" title="Remover">×</button>` : ''}
+        <div class="field product-name-row">
+          <label class="field-label">Item ${i + 1}</label>
+          <input class="field-input" id="p-nome-${i}" placeholder="Ex: Andor processional" value="${escHtml(p.nome)}" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Valor unit.</label>
+            <input class="field-input num-input" id="p-val-${i}" type="number" placeholder="0,00" value="${p.valorUnit || ''}" min="0" step="0.01" />
+          </div>
+          <div class="field">
+            <label class="field-label">Quantidade</label>
+            <input class="field-input num-input" id="p-qtd-${i}" type="number" placeholder="1" value="${p.qtd || 1}" min="1" step="1" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Observação (opcional)</label>
+          <input class="field-input" id="p-obs-${i}" placeholder="Cor, tamanho, detalhe..." value="${escHtml(p.obs || '')}" />
+        </div>
+      </div>`;
+      });
+      html += `</div>
+    <div style="padding:0 16px 14px">
+      <button class="add-btn" id="add-produto">${icons.plus} Adicionar item</button>
+    </div>
+  </div>
+  <div class="section" style="margin-bottom:0">
+    <div class="section-body">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--text-secondary)">Subtotal dos itens</span>
+        <span style="font-size:18px;font-weight:700;color:var(--green-dark)">${fmt(subtotalProdutos())}</span>
+      </div>
+    </div>
+  </div>`;
+      return html;
+    }
+
+    /* ---- Step 3: Frete ---- */
+    function renderFrete() {
+      const fr = state.frete;
+      const fval = calcFrete();
+      return `
+    <div class="section">
+      <div class="section-header">${sectionIcon('truck')}<span class="section-title">Cálculo do frete</span></div>
+      <div class="section-body">
+        <div class="field">
+          <label class="field-label">Rota (de Warner → evento)</label>
+          <div style="background:var(--green-light);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--green-dark)">
+            <b>Origem:</b> Av. André Avelino da Silva, 145, Jardim Esperança, Arapiraca – AL
+          </div>
+          <div style="height:6px;border-left:2px dashed var(--green-mid);margin:0 20px"></div>
+          <div style="background:${state.evento.endereco ? 'var(--green-light)' : '#f5f5f0'};border-radius:8px;padding:10px 12px;font-size:13px;color:${state.evento.endereco ? 'var(--green-dark)' : 'var(--text-muted)'}">
+            <b>Destino:</b> ${state.evento.endereco || 'Endereço do evento não informado (preencha na etapa anterior)'}
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Custo/km (R$)</label>
+            <input class="field-input num-input" id="fr-custo" type="number" placeholder="1.59" value="${fr.custo || 1.59}" min="0" step="0.01" />
+          </div>
+          <div class="field">
+            <label class="field-label">Margem (%)</label>
+            <input class="field-input num-input" id="fr-margem" type="number" placeholder="25" value="${fr.margemPct || 25}" min="0" max="99" step="1" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Frete mínimo (R$)</label>
+          <input class="field-input num-input" id="fr-min" type="number" placeholder="10" value="${fr.minimo || 10}" min="0" step="1" style="max-width:50%" />
+        </div>
+        <button class="calc-btn" id="calc-frete-btn">
+          🗺️ Calcular distância com Google Maps
+        </button>
+        ${fr.distanciaKm > 0 ? `
+        <div class="frete-result">
+          <div class="frete-result-label">Valor do frete</div>
+          <div class="frete-result-value">${fmt(fr.valorFrete)}</div>
+          <div class="frete-dist">Distância: ${fr.distanciaKm} km (ida e volta)</div>
+        </div>`: ''}
+        <div class="tip" style="margin-top:10px">
+          📐 Fórmula: max(mínimo, custo × km ÷ (1 – margem))<br>
+          Frete inclui ida e volta até o evento.
+        </div>
+      </div>
+    </div>
+  `;
+    }
+
+    /* ---- Step 4: Pagamento ---- */
+    function renderPagamento() {
+      const pg = state.pagamento;
+      const metodos = ['PIX', 'Cartão de crédito', 'Cartão de débito', 'Dinheiro', 'Transferência'];
+      const sub = subtotalProdutos();
+      const frete = pg.incluirFrete ? (state.frete.valorFrete || 0) : 0;
+      const base = sub + frete;
+      const taxa = (pg.taxaPct || 0) / 100;
+      const taxaValor = base * taxa;
+      const total = base + taxaValor;
+
+      return `
+    <div class="section">
+      <div class="section-header">${sectionIcon('card')}<span class="section-title">Forma de pagamento</span></div>
+      <div class="section-body">
+        ${field('Método', `<select class="field-input" id="pg-metodo">${metodos.map(m => `<option ${m === pg.metodo ? 'selected' : ''}>${m}</option>`).join('')}</select>`)}
+        ${field('Taxa adicional (%)', inp('pg-taxa', '0 = sem taxa', pg.taxaPct, 'number', 'num-input'))}
+        <div class="field">
+          <label class="field-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="pg-frete" ${pg.incluirFrete ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--green-dark)">
+            Incluir frete no total
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-body">
+        <div class="resumo-row"><label>Subtotal itens</label><span>${fmt(sub)}</span></div>
+        ${pg.incluirFrete ? `<div class="resumo-row"><label>Frete</label><span>${fmt(frete)}</span></div>` : ''}
+        ${taxa > 0 ? `<div class="resumo-row"><label>Taxa (${pg.taxaPct}%)</label><span>+ ${fmt(taxaValor)}</span></div>` : ''}
+      </div>
+      <div class="resumo-total">
+        <label>Valor final</label>
+        <span>${fmt(total)}</span>
+      </div>
+    </div>
+  `;
+    }
+
+    /* ---- Step 5: Resumo ---- */
+    function renderResumo() {
+      const cl = state.cliente;
+      const ev = state.evento;
+      const pg = state.pagamento;
+      const sub = subtotalProdutos();
+      const frete = pg.incluirFrete ? (state.frete.valorFrete || 0) : 0;
+      const taxa = (pg.taxaPct || 0) / 100;
+      const base = sub + frete;
+      const total = base * (1 + taxa);
+      const dataFmt = ev.data ? new Date(ev.data + 'T00:00').toLocaleDateString('pt-BR') : '—';
+
+      return `
+    <div class="resumo-card">
+      <div class="resumo-header">
+        <h2>🌸 Proposta de Orçamento</h2>
+        <p>Nº ${state.numOrc} · ${new Date().toLocaleDateString('pt-BR')}</p>
+      </div>
+      <div class="resumo-body">
+        <div class="resumo-row"><label>Cliente</label><span>${cl.nome || '—'}</span></div>
+        <div class="resumo-row"><label>WhatsApp</label><span>${cl.whatsapp || '—'}</span></div>
+        <div class="resumo-row"><label>Data do evento</label><span>${dataFmt}</span></div>
+        <div class="resumo-row"><label>Hora</label><span>${ev.hora || '—'}</span></div>
+        <div class="resumo-row"><label>Pagamento</label><span>${pg.metodo}</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">${sectionIcon('flower')}<span class="section-title">Itens</span></div>
+      <div class="section-body">
+        <div class="items-list">
+          ${state.produtos.map(p => `
+            <div class="item-row">
+              <span>${p.qtd || 1}x ${p.nome || 'Item'}</span>
+              <span>${fmt((parseFloat(p.valorUnit) || 0) * (parseInt(p.qtd) || 1))}</span>
+            </div>`).join('')}
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border-strong);display:flex;justify-content:space-between">
+          <span style="font-size:13px;color:var(--text-secondary)">Subtotal</span>
+          <span style="font-weight:600">${fmt(sub)}</span>
+        </div>
+        ${pg.incluirFrete && frete > 0 ? `<div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-size:13px;color:var(--text-secondary)">Frete</span><span style="font-weight:600">${fmt(frete)}</span></div>` : ''}
+        ${taxa > 0 ? `<div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-size:13px;color:var(--text-secondary)">Taxa ${pg.taxaPct}%</span><span style="font-weight:600">+ ${fmt(base * taxa)}</span></div>` : ''}
+      </div>
+      <div class="resumo-total">
+        <label>Total final</label>
+        <span>${fmt(total)}</span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px;padding-bottom:20px">
+      <button class="action-btn btn-whats" style="flex:1" onclick="copyWhats()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.075-.3-.15-1.263-.465-2.403-1.485-.888-.795-1.484-1.77-1.66-2.07-.174-.3-.019-.465.13-.615.134-.135.3-.345.45-.523.149-.18.199-.3.3-.5.099-.2.05-.375-.025-.524-.075-.15-.672-1.62-.922-2.206-.24-.584-.487-.51-.672-.51-.172-.015-.371-.015-.571-.015-.2 0-.523.074-.797.359-.273.3-1.045 1.02-1.045 2.475s1.07 2.865 1.219 3.075c.149.18 2.095 3.195 5.076 4.483.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.29.173-1.414-.074-.124-.272-.196-.572-.346"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.553 4.12 1.519 5.849L0 24l6.335-1.652A11.965 11.965 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0m0 21.818a9.818 9.818 0 01-5.001-1.364l-.359-.214-3.719.97.987-3.608-.234-.37A9.817 9.817 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182c5.42 0 9.818 4.398 9.818 9.818 0 5.421-4.398 9.818-9.818 9.818"/></svg>
+        Copiar WhatsApp
+      </button>
+      <button class="action-btn btn-pdf" style="flex:1" onclick="showPDF()">
+        📄 Gerar PDF
+      </button>
+    </div>
+    <button class="action-btn btn-nav-prev" style="width:100%;margin-bottom:20px" onclick="state.step=4;renderStep()">← Voltar e editar</button>
+  `;
+    }
+
+    /* ---- Attach listeners ---- */
+    function attachListeners() {
+      // Cliente
+      if (state.step === 0) {
+        bind('cl-nome', v => state.cliente.nome = v);
+        bind('cl-cpf', v => state.cliente.cpf = v);
+        bind('cl-whats', v => state.cliente.whatsapp = v);
+        bind('cl-end', v => state.cliente.endereco = v);
+      }
+      // Evento
+      if (state.step === 1) {
+        bind('ev-end', v => state.evento.endereco = v);
+        bind('ev-data', v => state.evento.data = v);
+        bind('ev-hora', v => state.evento.hora = v);
+        bind('ev-dur', v => state.evento.duracao = v);
+      }
+      // Pedido
+      if (state.step === 2) {
+        state.produtos.forEach((_, i) => {
+          bind(`p-nome-${i}`, v => state.produtos[i].nome = v);
+          bind(`p-val-${i}`, v => { state.produtos[i].valorUnit = parseFloat(v) || 0; updateSubtotal(); });
+          bind(`p-qtd-${i}`, v => { state.produtos[i].qtd = parseInt(v) || 1; updateSubtotal(); });
+          bind(`p-obs-${i}`, v => state.produtos[i].obs = v);
+        });
+        const addBtn = document.getElementById('add-produto');
+        if (addBtn) addBtn.addEventListener('click', () => {
+          state.produtos.push({ id: Date.now(), nome: '', valorUnit: 0, qtd: 1, obs: '' });
+          renderStep();
+        });
+        document.querySelectorAll('[data-remove]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.remove);
+            state.produtos.splice(idx, 1);
+            if (state.produtos.length === 0) state.produtos.push({ id: 1, nome: '', valorUnit: 0, qtd: 1, obs: '' });
+            renderStep();
+          });
+        });
+      }
+      // Frete
+      if (state.step === 3) {
+        bind('fr-custo', v => state.frete.custo = parseFloat(v) || 1.59);
+        bind('fr-margem', v => state.frete.margemPct = parseFloat(v) || 25);
+        bind('fr-min', v => state.frete.minimo = parseFloat(v) || 10);
+        const calcBtn = document.getElementById('calc-frete-btn');
+        if (calcBtn) calcBtn.addEventListener('click', calcFreteAPI);
+      }
+      // Pagamento
+      if (state.step === 4) {
+        bind('pg-metodo', v => { state.pagamento.metodo = v; renderStep(); });
+        bind('pg-taxa', v => { state.pagamento.taxaPct = parseFloat(v) || 0; renderStep(); });
+        const freteCb = document.getElementById('pg-frete');
+        if (freteCb) freteCb.addEventListener('change', e => { state.pagamento.incluirFrete = e.target.checked; renderStep(); });
+      }
+    }
+
+    function bind(id, fn) {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', e => fn(e.target.value));
+    }
+
+    function updateSubtotal() {
+      const el = document.querySelector('.section:last-child .section-body span:last-child');
+      if (el) el.textContent = fmt(subtotalProdutos());
+    }
+
+    function loadGoogleMapsScript(key) {
+      return new Promise((resolve, reject) => {
+        if (window.google && window.google.maps) {
+          resolve();
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=geometry`;
+        script.async = true;
+        script.defer = true;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+
+    /* ---- Frete API ---- */
+    async function calcFreteAPI() {
+      if (!state.evento.endereco) {
+        showToast('⚠️ Informe o endereço do evento primeiro');
+        return;
+      }
+      const btn = document.getElementById('calc-frete-btn');
+      btn.textContent = '⏳ Calculando...';
+      btn.classList.add('loading-btn');
+
+      const origem = 'Av. André Avelino da Silva, 145, Jardim Esperança, Arapiraca, AL';
+      const destino = state.evento.endereco;
+
+      try {
+        await loadGoogleMapsScript('AIzaSyC7QfkwrntuEFtRYZCj3qkzxU0M8bQyifo');
+        
+        const service = new google.maps.DistanceMatrixService();
+        service.getDistanceMatrix({
+          origins: [origem],
+          destinations: [destino],
+          travelMode: 'DRIVING',
+        }, (response, status) => {
+          if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
+            const distanceMeters = response.rows[0].elements[0].distance.value;
+            // Distância em km (multiplicado por 2 para ida e volta)
+            const distKm = (distanceMeters / 1000) * 2;
+            
+            const frete = Math.max(
+              state.frete.minimo || 10,
+              (state.frete.custo || 1.59) * distKm / (1 - (state.frete.margemPct || 25) / 100)
+            );
+
+            state.frete.distanciaKm = parseFloat(distKm.toFixed(1));
+            state.frete.valorFrete = parseFloat(frete.toFixed(2));
+            renderStep();
+            showToast(`✅ Frete calculado: ${fmt(frete)}`);
+          } else {
+            showToast('❌ Erro: Rota não encontrada.');
+            btn.textContent = '🗺️ Calcular distância com Google Maps';
+            btn.classList.remove('loading-btn');
+          }
+        });
+      } catch (e) {
+        showToast('❌ Erro ao conectar com Google Maps.');
+        btn.textContent = '🗺️ Calcular distância com Google Maps';
+        btn.classList.remove('loading-btn');
+      }
+    }
+
+    /* ---- Navigation ---- */
+    document.getElementById('btn-next').addEventListener('click', () => {
+      if (state.step < 5) { state.step++; renderStep(); window.scrollTo(0, 0); }
+    });
+    document.getElementById('btn-prev').addEventListener('click', () => {
+      if (state.step > 0) { state.step--; renderStep(); window.scrollTo(0, 0); }
+    });
+    document.querySelectorAll('.step-tab').forEach(t => {
+      t.addEventListener('click', () => {
+        const s = parseInt(t.dataset.step);
+        state.step = s; renderStep(); window.scrollTo(0, 0);
+      });
+    });
+
+    /* ---- Toast ---- */
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    /* ---- Copy WhatsApp ---- */
+    function copyWhats() {
+      const cl = state.cliente; const ev = state.evento; const pg = state.pagamento;
+      const dataFmt = ev.data ? new Date(ev.data + 'T00:00').toLocaleDateString('pt-BR') : '—';
+      const total = valorFinal();
+
+      let itens = state.produtos.map(p => `• ${p.qtd || 1}x ${p.nome || 'Item'}${p.obs ? ` (${p.obs})` : ''}`).join('\n');
+
+      const msg = `🌼 *Proposta de Orçamento — Warner Flores* 🌼\n\n*Dados do Cliente*\nNome: ${cl.nome || '—'}\nTelefone: ${cl.whatsapp || '—'}\nEndereço do Evento:\n${ev.endereco || '—'}\nData do Evento: ${dataFmt}\nHora do Evento: ${ev.hora || '—'}\nForma de Pagamento: ${pg.metodo}\n\n*Itens do Orçamento*\n${itens}\n\n*VALOR FINAL: ${fmt(total)}*\n\nValor incluso: mão de obra, entrega e instalação.`;
+
+      navigator.clipboard.writeText(msg).then(() => {
+        showToast('✅ Mensagem copiada!');
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = msg; document.body.appendChild(ta);
+        ta.select(); document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('✅ Mensagem copiada!');
+      });
+    }
+
+    /* ---- PDF ---- */
+    function showPDF() {
+      const cl = state.cliente; const ev = state.evento; const pg = state.pagamento;
+      const sub = subtotalProdutos();
+      const frete = pg.incluirFrete ? (state.frete.valorFrete || 0) : 0;
+      const taxa = (pg.taxaPct || 0) / 100;
+      const base = sub + frete;
+      const taxaValor = base * taxa;
+      const total = base + taxaValor;
+      const dataFmt = ev.data ? new Date(ev.data + 'T00:00').toLocaleDateString('pt-BR') : '—';
+      const dataHoje = new Date().toLocaleDateString('pt-BR');
+      const validade = new Date(Date.now() + 30 * 864e5).toLocaleDateString('pt-BR');
+      const numOrc = state.numOrc;
+
+      const itensRows = state.produtos.map((p, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${p.nome || '—'}${p.obs ? `<br><span style="color:#777;font-size:9px">${p.obs}</span>` : ''}</td>
+      <td style="text-align:right">${p.qtd || 1}</td>
+      <td style="text-align:right">${fmt(p.valorUnit)}</td>
+      <td style="text-align:right">${fmt((parseFloat(p.valorUnit) || 0) * (parseInt(p.qtd) || 1))}</td>
+    </tr>`).join('');
+
+      document.getElementById('pdf-preview').innerHTML = `
+    <div id="pdf-preview">
+      <div class="pdf-logo-row">
+        <div class="pdf-logo">W</div>
+        <div class="pdf-empresa">
+          <h2>L W DA SILVA</h2>
+          <p>CNPJ: 44.778.083/0001-10<br>
+          Av. André Avelino da Silva, 145, Jardim Esperança<br>
+          CEP: 57307-330 — Arapiraca – AL<br>
+          Tel: (82) 99680-8398 · linaldo-97@hotmail.com</p>
+        </div>
+      </div>
+
+      <div class="pdf-num-row">
+        <span>Orçamento: ${numOrc}</span>
+        <span>Data: ${dataHoje}</span>
+        <span>Validade: ${validade}</span>
+      </div>
+
+      <div class="pdf-section-title">Dados do cliente</div>
+      <table class="pdf-table" style="margin-bottom:4px">
+        <tr><td style="width:80px;color:#666;font-size:10px">Nome</td><td>${cl.nome || '—'}</td><td style="width:80px;color:#666;font-size:10px">Telefone</td><td>${cl.whatsapp || '—'}</td></tr>
+        <tr><td style="color:#666;font-size:10px">CPF/CNPJ</td><td>${cl.cpf || '—'}</td><td style="color:#666;font-size:10px">Endereço</td><td>${cl.endereco || '—'}</td></tr>
+      </table>
+
+      <div class="pdf-section-title">Dados do evento</div>
+      <table class="pdf-table" style="margin-bottom:4px">
+        <tr><td style="width:80px;color:#666;font-size:10px">Data</td><td>${dataFmt}</td><td style="width:80px;color:#666;font-size:10px">Hora</td><td>${ev.hora || '—'}</td></tr>
+        <tr><td style="color:#666;font-size:10px">Local</td><td colspan="3">${ev.endereco || '—'}</td></tr>
+        ${ev.duracao ? `<tr><td style="color:#666;font-size:10px">Duração</td><td colspan="3">${ev.duracao}</td></tr>` : ''}
+      </table>
+
+      <div class="pdf-section-title">Itens do orçamento</div>
+      <table class="pdf-table">
+        <thead><tr><th>#</th><th>Nome</th><th style="text-align:right">Qtd.</th><th style="text-align:right">Valor</th><th style="text-align:right">Subtotal</th></tr></thead>
+        <tbody>${itensRows}</tbody>
+      </table>
+
+      <div class="pdf-totals">
+        <div class="pdf-total-row"><span>Subtotal</span><span>${fmt(sub)}</span></div>
+        ${pg.incluirFrete && frete > 0 ? `<div class="pdf-total-row"><span>Frete (${state.frete.distanciaKm} km)</span><span>${fmt(frete)}</span></div>` : ''}
+        ${taxa > 0 ? `<div class="pdf-total-row"><span>Taxa ${pg.taxaPct}% (${pg.metodo})</span><span>+ ${fmt(taxaValor)}</span></div>` : ''}
+        <div class="pdf-total-final"><span>TOTAL</span><span>${fmt(total)}</span></div>
+      </div>
+
+      <div class="pdf-section-title" style="margin-top:14px">Observações</div>
+      <div class="pdf-obs">
+        <b>Forma de pagamento:</b> ${pg.metodo}${taxa > 0 ? ` — Taxa de ${pg.taxaPct}%` : ''}<br>
+        Valor incluso: mão de obra, materiais, transporte e instalação.<br>
+        Validade da proposta: 30 dias a partir da data de emissão.
+      </div>
+
+      <div class="pdf-assinaturas">
+        <div class="pdf-ass"><div class="pdf-ass-line">L W DA SILVA</div></div>
+        <div class="pdf-ass"><div class="pdf-ass-line">${cl.nome || 'Cliente'}</div></div>
+      </div>
+    </div>`;
+
+      document.getElementById('pdf-modal').classList.remove('hidden');
+    }
+
+    function printPDF() {
+      const content = document.getElementById('pdf-preview').innerHTML;
+      const win = window.open('', '_blank', 'width=700,height=900');
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Orçamento Warner Flores</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;padding:20px;max-width:700px;margin:0 auto;font-size:12px;color:#222}
+    .pdf-logo-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;border-bottom:2px solid #2d5a3d;padding-bottom:12px}
+    .pdf-logo{width:60px;height:60px;border-radius:50%;background:#e8f0ea;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#2d5a3d;flex-shrink:0}
+    .pdf-empresa h2{font-size:14px;font-weight:700;color:#2d5a3d}
+    .pdf-empresa p{font-size:10px;color:#555;line-height:1.6}
+    .pdf-num-row{display:flex;justify-content:space-between;background:#f5f5f0;padding:8px 12px;border-radius:6px;margin-bottom:14px;font-size:11px;font-weight:600;color:#444}
+    .pdf-section-title{background:#2d5a3d;color:white;padding:5px 10px;font-size:11px;font-weight:600;text-align:center;border-radius:4px;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+    .pdf-table{width:100%;border-collapse:collapse;font-size:11px}
+    .pdf-table th{background:#eee;padding:5px 8px;text-align:left;font-weight:600;font-size:10px;color:#444}
+    .pdf-table td{padding:5px 8px;border-bottom:.5px solid #e5e5e0}
+    .pdf-table tr:nth-child(even) td{background:#fafaf5}
+    .pdf-totals{margin-top:10px;background:#f5f5f0;border-radius:6px;padding:8px 12px}
+    .pdf-total-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
+    .pdf-total-final{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:#2d5a3d;padding:6px 0 0;border-top:1.5px solid #2d5a3d;margin-top:4px}
+    .pdf-obs{background:#f9f9f4;border:.5px solid #ddd;border-radius:6px;padding:8px 12px;margin-top:10px;font-size:11px;line-height:1.6}
+    .pdf-assinaturas{display:flex;justify-content:space-between;margin-top:30px}
+    .pdf-ass{text-align:center;width:40%}
+    .pdf-ass-line{border-top:1px solid #333;padding-top:4px;font-size:10px;color:#555}
+    @media print{body{padding:10px}}
+  </style></head><body>${content}</body></html>`);
+      win.document.close();
+      setTimeout(() => win.print(), 500);
+    }
+
+    // Init
+    renderStep();
+  </script>
+</body>
+
+</html>
