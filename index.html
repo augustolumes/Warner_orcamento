@@ -783,7 +783,7 @@
     <div class="header">
       <div class="header-top">
         <div class="logo-wrap">
-          <span class="logo-letter">W</span>
+          <img src="logo.jpg" alt="Warner Flores" style="width:100%; height:100%; object-fit:cover;" />
         </div>
         <div class="header-title">
           <h1>Warner Flores</h1>
@@ -886,7 +886,7 @@
     }
     function calcFrete() {
       const { custo, margemPct, minimo, distanciaKm } = state.frete;
-      const custoTotal = custo * distanciaKm;
+      const custoTotal = custo * (distanciaKm * 2);
       const margem = (margemPct || 0) / 100;
       const frete = margem >= 1 ? custoTotal : Math.max(parseFloat(minimo) || 0, custoTotal / (1 - margem));
       return frete;
@@ -948,7 +948,6 @@
         ${field('Endereço', inp('cl-end', 'Rua, número, bairro, cidade', cl.endereco))}
       </div>
     </div>
-    <div class="tip">💡 O nome e telefone serão usados na mensagem do WhatsApp.</div>
   `;
     }
 
@@ -967,7 +966,6 @@
         ${field('Duração (opcional)', inp('ev-dur', 'Ex: 3 horas', ev.duracao))}
       </div>
     </div>
-    <div class="tip">🗺️ O endereço do evento será usado para calcular o frete automaticamente.</div>
   `;
     }
 
@@ -1027,7 +1025,7 @@
         <div class="field">
           <label class="field-label">Rota (de Warner → evento)</label>
           <div style="background:var(--green-light);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--green-dark)">
-            <b>Origem:</b> Av. André Avelino da Silva, 145, Jardim Esperança, Arapiraca – AL
+            <b>Origem:</b> R. Expedicionário Brasileiro, 325 - Cavaco, Arapiraca - AL
           </div>
           <div style="height:6px;border-left:2px dashed var(--green-mid);margin:0 20px"></div>
           <div style="background:${state.evento.endereco ? 'var(--green-light)' : '#f5f5f0'};border-radius:8px;padding:10px 12px;font-size:13px;color:${state.evento.endereco ? 'var(--green-dark)' : 'var(--text-muted)'}">
@@ -1050,20 +1048,17 @@
             <input class="field-input num-input" id="fr-min" type="number" placeholder="10" value="${fr.minimo || 10}" min="0" step="1" />
           </div>
           <div class="field">
-            <label class="field-label">Distância (Ida e volta)</label>
+            <label class="field-label">Distância (Km)</label>
             <input class="field-input num-input" id="fr-dist" type="number" placeholder="Ex: 15" value="${fr.distanciaKm || ''}" min="0" step="0.1" />
           </div>
         </div>
-        <button class="calc-btn" id="calc-frete-btn">
-          🗺️ Calcular distância (Automático)
-        </button>
         <div class="frete-result" id="frete-result-box" style="display:${fr.distanciaKm > 0 ? 'block' : 'none'}">
           <div class="frete-result-label">Valor do frete</div>
           <div class="frete-result-value" id="frete-result-val">${fmt(fr.valorFrete || 0)}</div>
         </div>
         <div class="tip" style="margin-top:10px">
           📐 Fórmula: max(mínimo, custo × km ÷ (1 – margem))<br>
-          Frete inclui ida e volta até o evento.
+          A distância inserida será duplicada para considera ida e volta
         </div>
       </div>
     </div>
@@ -1086,7 +1081,7 @@
       <div class="section-header">${sectionIcon('card')}<span class="section-title">Forma de pagamento</span></div>
       <div class="section-body">
         ${field('Método', `<select class="field-input" id="pg-metodo">${metodos.map(m => `<option ${m === pg.metodo ? 'selected' : ''}>${m}</option>`).join('')}</select>`)}
-        ${field('Taxa adicional (%)', inp('pg-taxa', '0 = sem taxa', pg.taxaPct, 'number', 'num-input'))}
+        ${field('Taxa adicional (%)', `<input class="field-input num-input" id="pg-taxa" type="number" placeholder="0 = sem taxa" value="${pg.taxaPct !== undefined && pg.taxaPct !== 0 ? pg.taxaPct : ''}" step="0.01" />`)}
         <div class="field">
           <label class="field-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
             <input type="checkbox" id="pg-frete" ${pg.incluirFrete ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--green-dark)">
@@ -1226,9 +1221,6 @@
         bind('fr-margem', v => { state.frete.margemPct = parseFloat(v) || 25; updateFreteCalc(); });
         bind('fr-min', v => { state.frete.minimo = parseFloat(v) || 10; updateFreteCalc(); });
         bind('fr-dist', v => { state.frete.distanciaKm = parseFloat(v) || 0; updateFreteCalc(); });
-        
-        const calcBtn = document.getElementById('calc-frete-btn');
-        if (calcBtn) calcBtn.addEventListener('click', calcFreteAPI);
       }
       // Pagamento
       if (state.step === 4) {
@@ -1255,75 +1247,11 @@
       if (distKm > 0) {
         const frete = Math.max(
           fr.minimo || 10,
-          (fr.custo || 1.59) * distKm / (1 - (fr.margemPct || 25) / 100)
+          (fr.custo || 1.59) * (distKm * 2) / (1 - (fr.margemPct || 25) / 100)
         );
         fr.valorFrete = parseFloat(frete.toFixed(2));
       } else {
         fr.valorFrete = 0;
-      }
-    }
-
-    /* ---- Frete API (OpenStreetMap + OSRM) ---- */
-    async function calcFreteAPI() {
-      if (!state.evento.endereco) {
-        showToast('⚠️ Informe o endereço do evento primeiro');
-        return;
-      }
-      const btn = document.getElementById('calc-frete-btn');
-      btn.textContent = '⏳ Calculando...';
-      btn.classList.add('loading-btn');
-
-      const origem = 'Av. André Avelino da Silva, 145, Jardim Esperança, Arapiraca, AL';
-      const destino = state.evento.endereco;
-
-      try {
-        // Passo 1: Converter endereços em Coordenadas (Geocoding via Nominatim)
-        const fetchCoords = async (address) => {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&email=contato@warnerflores.com`);
-          if (!res.ok) throw new Error('Erro ao buscar coordenadas');
-          const data = await res.json();
-          if (!data || data.length === 0) return null;
-          return { lat: data[0].lat, lon: data[0].lon };
-        };
-
-        const coordOrigem = await fetchCoords(origem);
-        const coordDestino = await fetchCoords(destino);
-
-        if (!coordOrigem || !coordDestino) {
-          throw new Error('Não foi possível localizar os endereços no mapa. Verifique se estão corretos.');
-        }
-
-        // Passo 2: Calcular a Rota (Routing via OSRM)
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordOrigem.lon},${coordOrigem.lat};${coordDestino.lon},${coordDestino.lat}?overview=false`;
-        const resRota = await fetch(osrmUrl);
-        
-        if (!resRota.ok) throw new Error('Erro ao calcular a rota');
-        
-        const dataRota = await resRota.json();
-
-        if (dataRota && dataRota.routes && dataRota.routes.length > 0) {
-          const distanceMeters = dataRota.routes[0].distance;
-          // Distância em km (multiplicado por 2 para ida e volta)
-          const distKm = (distanceMeters / 1000) * 2;
-          
-          const frete = Math.max(
-            state.frete.minimo || 10,
-            (state.frete.custo || 1.59) * distKm / (1 - (state.frete.margemPct || 25) / 100)
-          );
-
-          state.frete.distanciaKm = parseFloat(distKm.toFixed(1));
-          state.frete.valorFrete = parseFloat(frete.toFixed(2));
-          renderStep();
-          showToast(`✅ Frete calculado: ${fmt(frete)}`);
-        } else {
-          throw new Error('Nenhuma rota encontrada entre os locais.');
-        }
-      } catch (e) {
-        console.error("Erro na API OpenStreetMap/OSRM:", e);
-        showToast('❌ Erro: ' + (e.message || 'Falha ao calcular.'));
-      } finally {
-        btn.textContent = '🗺️ Calcular distância (Automático)';
-        btn.classList.remove('loading-btn');
       }
     }
 
@@ -1397,7 +1325,9 @@
       document.getElementById('pdf-preview').innerHTML = `
     <div id="pdf-preview">
       <div class="pdf-logo-row">
-        <div class="pdf-logo">W</div>
+        <div class="pdf-logo" style="overflow:hidden;">
+          <img src="logo.jpg" alt="Warner Flores" style="width:100%; height:100%; object-fit:cover;" />
+        </div>
         <div class="pdf-empresa">
           <h2>L W DA SILVA</h2>
           <p>CNPJ: 44.778.083/0001-10<br>
@@ -1459,6 +1389,7 @@
       const content = document.getElementById('pdf-preview').innerHTML;
       const win = window.open('', '_blank', 'width=700,height=900');
       win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Orçamento Warner Flores</title>
+  <base href="${window.location.href}">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:Arial,sans-serif;padding:20px;max-width:700px;margin:0 auto;font-size:12px;color:#222}
@@ -1476,7 +1407,7 @@
     .pdf-total-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
     .pdf-total-final{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:#2d5a3d;padding:6px 0 0;border-top:1.5px solid #2d5a3d;margin-top:4px}
     .pdf-obs{background:#f9f9f4;border:.5px solid #ddd;border-radius:6px;padding:8px 12px;margin-top:10px;font-size:11px;line-height:1.6}
-    .pdf-assinaturas{display:flex;justify-content:space-between;margin-top:30px}
+    .pdf-assinaturas{display:flex;justify-content:space-between;margin-top:75px}
     .pdf-ass{text-align:center;width:40%}
     .pdf-ass-line{border-top:1px solid #333;padding-top:4px;font-size:10px;color:#555}
     @media print{body{padding:10px}}
