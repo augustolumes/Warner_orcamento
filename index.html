@@ -1044,19 +1044,23 @@
             <input class="field-input num-input" id="fr-margem" type="number" placeholder="25" value="${fr.margemPct || 25}" min="0" max="99" step="1" />
           </div>
         </div>
-        <div class="field">
-          <label class="field-label">Frete mínimo (R$)</label>
-          <input class="field-input num-input" id="fr-min" type="number" placeholder="10" value="${fr.minimo || 10}" min="0" step="1" style="max-width:50%" />
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label">Frete mínimo (R$)</label>
+            <input class="field-input num-input" id="fr-min" type="number" placeholder="10" value="${fr.minimo || 10}" min="0" step="1" />
+          </div>
+          <div class="field">
+            <label class="field-label">Distância (Ida e volta)</label>
+            <input class="field-input num-input" id="fr-dist" type="number" placeholder="Ex: 15" value="${fr.distanciaKm || ''}" min="0" step="0.1" />
+          </div>
         </div>
         <button class="calc-btn" id="calc-frete-btn">
-          🗺️ Calcular distância com Google Maps
+          🗺️ Calcular distância (Automático)
         </button>
-        ${fr.distanciaKm > 0 ? `
-        <div class="frete-result">
+        <div class="frete-result" id="frete-result-box" style="display:${fr.distanciaKm > 0 ? 'block' : 'none'}">
           <div class="frete-result-label">Valor do frete</div>
-          <div class="frete-result-value">${fmt(fr.valorFrete)}</div>
-          <div class="frete-dist">Distância: ${fr.distanciaKm} km (ida e volta)</div>
-        </div>`: ''}
+          <div class="frete-result-value" id="frete-result-val">${fmt(fr.valorFrete || 0)}</div>
+        </div>
         <div class="tip" style="margin-top:10px">
           📐 Fórmula: max(mínimo, custo × km ÷ (1 – margem))<br>
           Frete inclui ida e volta até o evento.
@@ -1208,9 +1212,21 @@
       }
       // Frete
       if (state.step === 3) {
-        bind('fr-custo', v => state.frete.custo = parseFloat(v) || 1.59);
-        bind('fr-margem', v => state.frete.margemPct = parseFloat(v) || 25);
-        bind('fr-min', v => state.frete.minimo = parseFloat(v) || 10);
+        const updateFreteCalc = () => {
+          calcularFreteManual();
+          const box = document.getElementById('frete-result-box');
+          const val = document.getElementById('frete-result-val');
+          if (box && val) {
+            box.style.display = state.frete.distanciaKm > 0 ? 'block' : 'none';
+            val.textContent = fmt(state.frete.valorFrete || 0);
+          }
+        };
+
+        bind('fr-custo', v => { state.frete.custo = parseFloat(v) || 1.59; updateFreteCalc(); });
+        bind('fr-margem', v => { state.frete.margemPct = parseFloat(v) || 25; updateFreteCalc(); });
+        bind('fr-min', v => { state.frete.minimo = parseFloat(v) || 10; updateFreteCalc(); });
+        bind('fr-dist', v => { state.frete.distanciaKm = parseFloat(v) || 0; updateFreteCalc(); });
+        
         const calcBtn = document.getElementById('calc-frete-btn');
         if (calcBtn) calcBtn.addEventListener('click', calcFreteAPI);
       }
@@ -1231,6 +1247,20 @@
     function updateSubtotal() {
       const el = document.querySelector('.section:last-child .section-body span:last-child');
       if (el) el.textContent = fmt(subtotalProdutos());
+    }
+
+    function calcularFreteManual() {
+      const fr = state.frete;
+      const distKm = fr.distanciaKm || 0;
+      if (distKm > 0) {
+        const frete = Math.max(
+          fr.minimo || 10,
+          (fr.custo || 1.59) * distKm / (1 - (fr.margemPct || 25) / 100)
+        );
+        fr.valorFrete = parseFloat(frete.toFixed(2));
+      } else {
+        fr.valorFrete = 0;
+      }
     }
 
     /* ---- Frete API (OpenStreetMap + OSRM) ---- */
