@@ -1233,22 +1233,6 @@
       if (el) el.textContent = fmt(subtotalProdutos());
     }
 
-    function loadGoogleMapsScript(key) {
-      return new Promise((resolve, reject) => {
-        if (window.google && window.google.maps) {
-          resolve();
-          return;
-        }
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=geometry`;
-        script.async = true;
-        script.defer = true;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
-    }
-
     /* ---- Frete API ---- */
     async function calcFreteAPI() {
       if (!state.evento.endereco) {
@@ -1263,35 +1247,54 @@
       const destino = state.evento.endereco;
 
       try {
-        await loadGoogleMapsScript('AIzaSyC7QfkwrntuEFtRYZCj3qkzxU0M8bQyifo');
+        const url = 'https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix';
+        const apiKey = 'AIzaSyC7QfkwrntuEFtRYZCj3qkzxU0M8bQyifo';
         
-        const service = new google.maps.DistanceMatrixService();
-        service.getDistanceMatrix({
-          origins: [origem],
-          destinations: [destino],
-          travelMode: 'DRIVING',
-        }, (response, status) => {
-          if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
-            const distanceMeters = response.rows[0].elements[0].distance.value;
-            // Distância em km (multiplicado por 2 para ida e volta)
-            const distKm = (distanceMeters / 1000) * 2;
-            
-            const frete = Math.max(
-              state.frete.minimo || 10,
-              (state.frete.custo || 1.59) * distKm / (1 - (state.frete.margemPct || 25) / 100)
-            );
-
-            state.frete.distanciaKm = parseFloat(distKm.toFixed(1));
-            state.frete.valorFrete = parseFloat(frete.toFixed(2));
-            renderStep();
-            showToast(`✅ Frete calculado: ${fmt(frete)}`);
-          } else {
-            showToast('❌ Erro: Rota não encontrada.');
-            btn.textContent = '🗺️ Calcular distância com Google Maps';
-            btn.classList.remove('loading-btn');
-          }
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': apiKey,
+            'X-Goog-FieldMask': 'originIndex,destinationIndex,duration,distanceMeters,status'
+          },
+          body: JSON.stringify({
+            origins: [{
+              waypoint: { address: origem }
+            }],
+            destinations: [{
+              waypoint: { address: destino }
+            }],
+            travelMode: 'DRIVE',
+            routingPreference: 'TRAFFIC_AWARE'
+          })
         });
+
+        if (!response.ok) throw new Error('Erro HTTP na API');
+        
+        const data = await response.json();
+        const route = data[0]; // Retorna um array com o primeiro resultado da matriz
+        
+        if (route && route.distanceMeters !== undefined) {
+          const distanceMeters = route.distanceMeters;
+          // Distância em km (multiplicado por 2 para ida e volta)
+          const distKm = (distanceMeters / 1000) * 2;
+          
+          const frete = Math.max(
+            state.frete.minimo || 10,
+            (state.frete.custo || 1.59) * distKm / (1 - (state.frete.margemPct || 25) / 100)
+          );
+
+          state.frete.distanciaKm = parseFloat(distKm.toFixed(1));
+          state.frete.valorFrete = parseFloat(frete.toFixed(2));
+          renderStep();
+          showToast(`✅ Frete calculado: ${fmt(frete)}`);
+        } else {
+          showToast('❌ Erro: Rota não encontrada.');
+          btn.textContent = '🗺️ Calcular distância com Google Maps';
+          btn.classList.remove('loading-btn');
+        }
       } catch (e) {
+        console.error(e);
         showToast('❌ Erro ao conectar com Google Maps.');
         btn.textContent = '🗺️ Calcular distância com Google Maps';
         btn.classList.remove('loading-btn');
