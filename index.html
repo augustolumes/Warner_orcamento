@@ -223,9 +223,12 @@
     }
 
     .field-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      display: flex;
+      gap: 16px;
+    }
+    .field-row > .field {
+      flex: 1;
+      min-width: 0;
     }
 
     .field-row-3 {
@@ -943,7 +946,7 @@
       <div class="section-header">${sectionIcon('user')}<span class="section-title">Dados do cliente</span></div>
       <div class="section-body">
         ${field('Nome', inp('cl-nome', 'Ex: Paróquia São Francisco', cl.nome))}
-        ${field('CPF / CNPJ', inp('cl-cpf', '000.000.000-00', cl.cpf))}
+        ${field('CPF / CNPJ', inp('cl-cpf', '000.000.000-00', cl.cpf) + '<div id="cpf-error" style="color:#d93025;font-size:11px;margin-top:6px;display:none;font-weight:600">CPF ou CNPJ inválido</div>')}
         ${field('WhatsApp', inp('cl-whats', '(82) 99999-9999', cl.whatsapp, 'tel'))}
         ${field('Endereço', inp('cl-end', 'Rua, número, bairro, cidade', cl.endereco))}
       </div>
@@ -1081,7 +1084,7 @@
       <div class="section-header">${sectionIcon('card')}<span class="section-title">Forma de pagamento</span></div>
       <div class="section-body">
         ${field('Método', `<select class="field-input" id="pg-metodo">${metodos.map(m => `<option ${m === pg.metodo ? 'selected' : ''}>${m}</option>`).join('')}</select>`)}
-        ${field('Taxa adicional (%)', `<input class="field-input num-input" id="pg-taxa" type="number" placeholder="0 = sem taxa" value="${pg.taxaPct !== undefined && pg.taxaPct !== 0 ? pg.taxaPct : ''}" step="0.01" />`)}
+        ${field('Taxa adicional (%)', `<input class="field-input num-input" id="pg-taxa" type="number" inputmode="decimal" placeholder="0 = sem taxa" value="${pg.taxaPct !== undefined && pg.taxaPct !== 0 ? pg.taxaPct : ''}" min="0" step="0.01" />`)}
         <div class="field">
           <label class="field-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
             <input type="checkbox" id="pg-frete" ${pg.incluirFrete ? 'checked' : ''} style="width:16px;height:16px;cursor:pointer;accent-color:var(--green-dark)">
@@ -1167,12 +1170,69 @@
   `;
     }
 
+    function validaCpfCnpj(val) {
+      const s = val.replace(/\D/g, '');
+      if (!s) return true;
+      if (s.length !== 11 && s.length !== 14) return false;
+      if (s.length === 11) {
+        if (/^(\d)\1+$/.test(s)) return false;
+        let sum = 0, rem;
+        for (let i=1; i<=9; i++) sum = sum + parseInt(s.substring(i-1, i)) * (11 - i);
+        rem = (sum * 10) % 11;
+        if ((rem === 10) || (rem === 11)) rem = 0;
+        if (rem !== parseInt(s.substring(9, 10))) return false;
+        sum = 0;
+        for (let i=1; i<=10; i++) sum = sum + parseInt(s.substring(i-1, i)) * (12 - i);
+        rem = (sum * 10) % 11;
+        if ((rem === 10) || (rem === 11)) rem = 0;
+        if (rem !== parseInt(s.substring(10, 11))) return false;
+        return true;
+      }
+      if (s.length === 14) {
+        if (/^(\d)\1+$/.test(s)) return false;
+        let size = s.length - 2;
+        let numbers = s.substring(0, size);
+        let digits = s.substring(size);
+        let sum = 0, pos = size - 7;
+        for (let i = size; i >= 1; i--) {
+          sum += numbers.charAt(size - i) * pos--;
+          if (pos < 2) pos = 9;
+        }
+        let result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+        if (result != digits.charAt(0)) return false;
+        size = size + 1;
+        numbers = s.substring(0, size);
+        sum = 0;
+        pos = size - 7;
+        for (let i = size; i >= 1; i--) {
+          sum += numbers.charAt(size - i) * pos--;
+          if (pos < 2) pos = 9;
+        }
+        result = sum % 11 < 2 ? 0 : 11 - sum % 11;
+        if (result != digits.charAt(1)) return false;
+        return true;
+      }
+      return false;
+    }
+
     /* ---- Attach listeners ---- */
     function attachListeners() {
       // Cliente
       if (state.step === 0) {
         bind('cl-nome', v => state.cliente.nome = v);
         bind('cl-cpf', v => state.cliente.cpf = v);
+        const cpfEl = document.getElementById('cl-cpf');
+        if (cpfEl) {
+          cpfEl.addEventListener('blur', e => {
+            const v = e.target.value;
+            const errEl = document.getElementById('cpf-error');
+            if (errEl) errEl.style.display = (v && !validaCpfCnpj(v)) ? 'block' : 'none';
+          });
+          cpfEl.addEventListener('input', () => {
+            const errEl = document.getElementById('cpf-error');
+            if (errEl) errEl.style.display = 'none';
+          });
+        }
         bind('cl-whats', v => state.cliente.whatsapp = v);
         bind('cl-end', v => state.cliente.endereco = v);
       }
@@ -1225,7 +1285,17 @@
       // Pagamento
       if (state.step === 4) {
         bind('pg-metodo', v => { state.pagamento.metodo = v; renderStep(); });
-        bind('pg-taxa', v => { state.pagamento.taxaPct = parseFloat(v) || 0; renderStep(); });
+        
+        const taxaInput = document.getElementById('pg-taxa');
+        if (taxaInput) {
+          taxaInput.addEventListener('input', e => {
+            const valor = e.target.value;
+            state.pagamento.taxaPct = valor === '' ? 0 : Number(valor.replace(',', '.'));
+          });
+          taxaInput.addEventListener('change', () => {
+            renderStep();
+          });
+        }
         const freteCb = document.getElementById('pg-frete');
         if (freteCb) freteCb.addEventListener('change', e => { state.pagamento.incluirFrete = e.target.checked; renderStep(); });
       }
@@ -1315,66 +1385,78 @@
 
       const itensRows = state.produtos.map((p, i) => `
     <tr>
-      <td>${i + 1}</td>
-      <td>${p.nome || '—'}${p.obs ? `<br><span style="color:#777;font-size:9px">${p.obs}</span>` : ''}</td>
+      <td style="text-align:center">${i + 1}</td>
+      <td>${p.nome || '—'}${p.obs ? `<br><span style="color:#666;font-size:10px">${p.obs}</span>` : ''}</td>
       <td style="text-align:right">${p.qtd || 1}</td>
       <td style="text-align:right">${fmt(p.valorUnit)}</td>
       <td style="text-align:right">${fmt((parseFloat(p.valorUnit) || 0) * (parseInt(p.qtd) || 1))}</td>
     </tr>`).join('');
 
       document.getElementById('pdf-preview').innerHTML = `
-    <div id="pdf-preview">
-      <div class="pdf-logo-row">
-        <div class="pdf-logo" style="overflow:hidden;">
-          <img src="logo.jpg" alt="Warner Flores" style="width:100%; height:100%; object-fit:cover;" />
+    <div id="pdf-preview-content">
+      <div class="pdf-header">
+        <div class="pdf-logo">
+          <img src="logo.jpg" alt="Warner Flores" id="pdf-logo-img" style="width:100%; height:100%; object-fit:contain;" />
         </div>
-        <div class="pdf-empresa">
-          <h2>L W DA SILVA</h2>
-          <p>CNPJ: 44.778.083/0001-10<br>
-          Av. André Avelino da Silva, 145, Jardim Esperança<br>
-          CEP: 57307-330 — Arapiraca – AL<br>
-          Tel: (82) 99680-8398 · linaldo-97@hotmail.com</p>
+        <div class="pdf-empresa-info">
+          <div class="pdf-empresa-col1">
+            <h2>L W DA SILVA</h2>
+            <p>CNPJ 44.778.083/0001-10<br>
+            Av. André avelino da silva, 145, Jardim<br>
+            Esperança, CEP: 57307-330. Arapiraca - AL</p>
+          </div>
+          <div class="pdf-empresa-col2">
+            <p>(82) 99680-8398<br>linaldo-97@hotmail.com</p>
+          </div>
         </div>
       </div>
 
-      <div class="pdf-num-row">
-        <span>Orçamento: ${numOrc}</span>
-        <span>Data: ${dataHoje}</span>
-        <span>Validade: ${validade}</span>
-      </div>
-
-      <div class="pdf-section-title">Dados do cliente</div>
-      <table class="pdf-table" style="margin-bottom:4px">
-        <tr><td style="width:80px;color:#666;font-size:10px">Nome</td><td>${cl.nome || '—'}</td><td style="width:80px;color:#666;font-size:10px">Telefone</td><td>${cl.whatsapp || '—'}</td></tr>
-        <tr><td style="color:#666;font-size:10px">CPF/CNPJ</td><td>${cl.cpf || '—'}</td><td style="color:#666;font-size:10px">Endereço</td><td>${cl.endereco || '—'}</td></tr>
+      <table class="pdf-info-table" style="margin-bottom:14px">
+        <tr>
+          <td style="text-align:center"><span class="pdf-label">Orçamento:</span> ${numOrc}</td>
+          <td style="text-align:center"><span class="pdf-label">Data:</span> ${dataHoje}</td>
+          <td style="text-align:center"><span class="pdf-label">Validade:</span> ${validade}</td>
+        </tr>
       </table>
 
-      <div class="pdf-section-title">Dados do evento</div>
-      <table class="pdf-table" style="margin-bottom:4px">
-        <tr><td style="width:80px;color:#666;font-size:10px">Data</td><td>${dataFmt}</td><td style="width:80px;color:#666;font-size:10px">Hora</td><td>${ev.hora || '—'}</td></tr>
-        <tr><td style="color:#666;font-size:10px">Local</td><td colspan="3">${ev.endereco || '—'}</td></tr>
-        ${ev.duracao ? `<tr><td style="color:#666;font-size:10px">Duração</td><td colspan="3">${ev.duracao}</td></tr>` : ''}
+      <table class="pdf-table" style="margin-bottom:14px">
+        <tr><th colspan="4" class="pdf-section-title">Dados do cliente</th></tr>
+        <tr><td class="pdf-label" style="width:80px">Nome</td><td colspan="3">${cl.nome || '—'}</td></tr>
+        <tr><td class="pdf-label">Telefone</td><td>${cl.whatsapp || '—'}</td><td class="pdf-label" style="width:80px">E-mail</td><td>${cl.email || '—'}</td></tr>
+        <tr><td class="pdf-label">CPF</td><td colspan="3">${cl.cpf || '—'}</td></tr>
+        <tr><td class="pdf-label">Endereço</td><td colspan="3">${cl.endereco || '—'}</td></tr>
       </table>
 
-      <div class="pdf-section-title">Itens do orçamento</div>
+      <table class="pdf-table" style="margin-bottom:14px">
+        <tr><th colspan="4" class="pdf-section-title">Dados do evento</th></tr>
+        <tr><td class="pdf-label" style="width:80px">Data</td><td>${dataFmt}</td><td class="pdf-label" style="width:80px">Hora</td><td>${ev.hora || '—'}</td></tr>
+        <tr><td class="pdf-label">Local</td><td colspan="3">${ev.endereco || '—'}</td></tr>
+        ${ev.duracao ? `<tr><td class="pdf-label">Duração</td><td colspan="3">${ev.duracao}</td></tr>` : ''}
+      </table>
+
+      <table class="pdf-table" style="margin-bottom:14px">
+        <tr><th colspan="5" class="pdf-section-title">Itens</th></tr>
+        <tr><td class="pdf-label" style="width:30px;text-align:center">#</td><td class="pdf-label">Nome</td><td class="pdf-label" style="text-align:right;width:60px">Qtd.</td><td class="pdf-label" style="text-align:right;width:90px">Valor</td><td class="pdf-label" style="text-align:right;width:90px">Subtotal</td></tr>
+        ${itensRows}
+      </table>
+
+      <table class="pdf-totals-table">
+        <tr>
+          <td style="text-align:center"><span class="pdf-label">Subtotal:</span> ${fmt(sub)}</td>
+          ${frete > 0 ? `<td style="text-align:center"><span class="pdf-label">Frete:</span> ${fmt(frete)}</td>` : ''}
+          ${taxa > 0 ? `<td style="text-align:center"><span class="pdf-label">Taxa:</span> ${fmt(taxaValor)}</td>` : ''}
+          <td style="text-align:center; border-top: 1.5px solid #333;" class="pdf-total-final"><span class="pdf-label">Total:</span> ${fmt(total)}</td>
+        </tr>
+      </table>
+
       <table class="pdf-table">
-        <thead><tr><th>#</th><th>Nome</th><th style="text-align:right">Qtd.</th><th style="text-align:right">Valor</th><th style="text-align:right">Subtotal</th></tr></thead>
-        <tbody>${itensRows}</tbody>
+        <tr><th class="pdf-section-title">Observações</th></tr>
+        <tr><td style="line-height:1.6">
+          <span class="pdf-label">Forma de pagamento:</span> ${pg.metodo}${taxa > 0 ? ` — Taxa de ${pg.taxaPct}%` : ''}<br>
+          Valor incluso: mão de obra, materiais, transporte e instalação.<br>
+          Validade da proposta: 30 dias a partir da data de emissão.
+        </td></tr>
       </table>
-
-      <div class="pdf-totals">
-        <div class="pdf-total-row"><span>Subtotal</span><span>${fmt(sub)}</span></div>
-        ${pg.incluirFrete && frete > 0 ? `<div class="pdf-total-row"><span>Frete (${state.frete.distanciaKm} km)</span><span>${fmt(frete)}</span></div>` : ''}
-        ${taxa > 0 ? `<div class="pdf-total-row"><span>Taxa ${pg.taxaPct}% (${pg.metodo})</span><span>+ ${fmt(taxaValor)}</span></div>` : ''}
-        <div class="pdf-total-final"><span>TOTAL</span><span>${fmt(total)}</span></div>
-      </div>
-
-      <div class="pdf-section-title" style="margin-top:14px">Observações</div>
-      <div class="pdf-obs">
-        <b>Forma de pagamento:</b> ${pg.metodo}${taxa > 0 ? ` — Taxa de ${pg.taxaPct}%` : ''}<br>
-        Valor incluso: mão de obra, materiais, transporte e instalação.<br>
-        Validade da proposta: 30 dias a partir da data de emissão.
-      </div>
 
       <div class="pdf-assinaturas">
         <div class="pdf-ass"><div class="pdf-ass-line">L W DA SILVA</div></div>
@@ -1391,29 +1473,57 @@
       win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Orçamento Warner Flores</title>
   <base href="${window.location.href}">
   <style>
+    :root { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Arial,sans-serif;padding:20px;max-width:700px;margin:0 auto;font-size:12px;color:#222}
-    .pdf-logo-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;border-bottom:2px solid #2d5a3d;padding-bottom:12px}
-    .pdf-logo{width:60px;height:60px;border-radius:50%;background:#e8f0ea;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#2d5a3d;flex-shrink:0}
-    .pdf-empresa h2{font-size:14px;font-weight:700;color:#2d5a3d}
-    .pdf-empresa p{font-size:10px;color:#555;line-height:1.6}
-    .pdf-num-row{display:flex;justify-content:space-between;background:#f5f5f0;padding:8px 12px;border-radius:6px;margin-bottom:14px;font-size:11px;font-weight:600;color:#444}
-    .pdf-section-title{background:#2d5a3d;color:white;padding:5px 10px;font-size:11px;font-weight:600;text-align:center;border-radius:4px;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.5px}
-    .pdf-table{width:100%;border-collapse:collapse;font-size:11px}
-    .pdf-table th{background:#eee;padding:5px 8px;text-align:left;font-weight:600;font-size:10px;color:#444}
-    .pdf-table td{padding:5px 8px;border-bottom:.5px solid #e5e5e0}
-    .pdf-table tr:nth-child(even) td{background:#fafaf5}
-    .pdf-totals{margin-top:10px;background:#f5f5f0;border-radius:6px;padding:8px 12px}
-    .pdf-total-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
-    .pdf-total-final{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:#2d5a3d;padding:6px 0 0;border-top:1.5px solid #2d5a3d;margin-top:4px}
-    .pdf-obs{background:#f9f9f4;border:.5px solid #ddd;border-radius:6px;padding:8px 12px;margin-top:10px;font-size:11px;line-height:1.6}
-    .pdf-assinaturas{display:flex;justify-content:space-between;margin-top:75px}
-    .pdf-ass{text-align:center;width:40%}
-    .pdf-ass-line{border-top:1px solid #333;padding-top:4px;font-size:10px;color:#555}
-    @media print{body{padding:10px}}
+    body{font-family:Arial,sans-serif;padding:20px;max-width:700px;margin:0 auto;font-size:12px;color:#000;background:#fff;}
+    
+    .pdf-header{display:flex;align-items:center;border:1px solid #e0e0e0;padding:12px;margin-bottom:14px;background:#fff;page-break-inside:avoid;}
+    .pdf-logo{width:80px;height:80px;margin-right:15px;flex-shrink:0;background:#fff;}
+    .pdf-empresa-info{display:flex;justify-content:space-between;flex:1;align-items:center;}
+    .pdf-empresa-col1 h2{font-size:14px;font-weight:700;color:#000;margin-bottom:4px;text-transform:uppercase;}
+    .pdf-empresa-col1 p{font-size:11px;color:#333;line-height:1.4;}
+    .pdf-empresa-col2{text-align:right;}
+    .pdf-empresa-col2 p{font-size:11px;color:#333;line-height:1.4;}
+
+    .pdf-info-table{width:100%;border-collapse:collapse;border:1px solid #e0e0e0;background:#fff;page-break-inside:avoid;}
+    .pdf-info-table td{padding:8px 12px;border:1px solid #e0e0e0;font-size:11px;color:#000;}
+
+    .pdf-section-title{text-align:center;font-weight:700;font-size:12px;color:#000;margin:0;text-transform:none;page-break-after:avoid;}
+    
+    .pdf-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e0e0e0;page-break-inside:auto;}
+    .pdf-table tr{page-break-inside:avoid;}
+    .pdf-table th{padding:8px;border:1px solid #e0e0e0;font-size:12px;font-weight:700;color:#000;background:#fff;text-align:center;}
+    .pdf-table td{padding:6px 8px;border:1px solid #e0e0e0;font-size:11px;color:#000;}
+    .pdf-label{font-weight:700;color:#000;}
+
+    .pdf-totals-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e0e0e0;margin-bottom:14px;page-break-inside:avoid;}
+    .pdf-totals-table td{padding:8px 12px;border:1px solid #e0e0e0;font-size:11px;color:#000;}
+    .pdf-total-final{font-size:13px;font-weight:700;}
+
+    .pdf-assinaturas{display:flex;justify-content:space-around;margin-top:50px;page-break-inside:avoid;}
+    .pdf-ass{text-align:center;width:40%;}
+    .pdf-ass-line{border-top:1px solid #000;padding-top:4px;font-size:11px;color:#000;font-weight:600;}
+
+    @media print {
+      body{padding:0}
+    }
   </style></head><body>${content}</body></html>`);
       win.document.close();
-      setTimeout(() => win.print(), 500);
+
+      win.onload = () => {
+        Promise.all([
+          win.document.fonts.ready,
+          ...Array.from(win.document.images).map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(resolve => {
+              img.onload = resolve;
+              img.onerror = resolve;
+            });
+          })
+        ]).then(() => {
+          win.print();
+        });
+      };
     }
 
     // Init
