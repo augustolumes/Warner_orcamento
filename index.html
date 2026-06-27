@@ -1233,7 +1233,7 @@
       if (el) el.textContent = fmt(subtotalProdutos());
     }
 
-    /* ---- Frete API ---- */
+    /* ---- Frete API (OpenStreetMap + OSRM) ---- */
     async function calcFreteAPI() {
       if (!state.evento.endereco) {
         showToast('⚠️ Informe o endereço do evento primeiro');
@@ -1247,35 +1247,32 @@
       const destino = state.evento.endereco;
 
       try {
-        const url = 'https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix';
-        const apiKey = 'AIzaSyC7QfkwrntuEFtRYZCj3qkzxU0M8bQyifo';
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': apiKey,
-            'X-Goog-FieldMask': 'originIndex,destinationIndex,duration,distanceMeters,status'
-          },
-          body: JSON.stringify({
-            origins: [{
-              waypoint: { address: origem }
-            }],
-            destinations: [{
-              waypoint: { address: destino }
-            }],
-            travelMode: 'DRIVE',
-            routingPreference: 'TRAFFIC_AWARE'
-          })
-        });
+        // Passo 1: Converter endereços em Coordenadas (Geocoding via Nominatim)
+        const fetchCoords = async (address) => {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&email=contato@warnerflores.com`);
+          if (!res.ok) throw new Error('Erro ao buscar coordenadas');
+          const data = await res.json();
+          if (!data || data.length === 0) return null;
+          return { lat: data[0].lat, lon: data[0].lon };
+        };
 
-        if (!response.ok) throw new Error('Erro HTTP na API');
+        const coordOrigem = await fetchCoords(origem);
+        const coordDestino = await fetchCoords(destino);
+
+        if (!coordOrigem || !coordDestino) {
+          throw new Error('Não foi possível localizar os endereços no mapa. Verifique se estão corretos.');
+        }
+
+        // Passo 2: Calcular a Rota (Routing via OSRM)
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${coordOrigem.lon},${coordOrigem.lat};${coordDestino.lon},${coordDestino.lat}?overview=false`;
+        const resRota = await fetch(osrmUrl);
         
-        const data = await response.json();
-        const route = data[0]; // Retorna um array com o primeiro resultado da matriz
+        if (!resRota.ok) throw new Error('Erro ao calcular a rota');
         
-        if (route && route.distanceMeters !== undefined) {
-          const distanceMeters = route.distanceMeters;
+        const dataRota = await resRota.json();
+
+        if (dataRota && dataRota.routes && dataRota.routes.length > 0) {
+          const distanceMeters = dataRota.routes[0].distance;
           // Distância em km (multiplicado por 2 para ida e volta)
           const distKm = (distanceMeters / 1000) * 2;
           
@@ -1289,14 +1286,13 @@
           renderStep();
           showToast(`✅ Frete calculado: ${fmt(frete)}`);
         } else {
-          showToast('❌ Erro: Rota não encontrada.');
-          btn.textContent = '🗺️ Calcular distância com Google Maps';
-          btn.classList.remove('loading-btn');
+          throw new Error('Nenhuma rota encontrada entre os locais.');
         }
       } catch (e) {
-        console.error(e);
-        showToast('❌ Erro ao conectar com Google Maps.');
-        btn.textContent = '🗺️ Calcular distância com Google Maps';
+        console.error("Erro na API OpenStreetMap/OSRM:", e);
+        showToast('❌ Erro: ' + (e.message || 'Falha ao calcular.'));
+      } finally {
+        btn.textContent = '🗺️ Calcular distância (Automático)';
         btn.classList.remove('loading-btn');
       }
     }
